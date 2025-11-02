@@ -73,7 +73,7 @@ export default function CartPage() {
             {items.map((i) => {
               const p = products.find((p) => p.id === i.productId);
               return (
-                <li key={i.productId} className="flex items-center justify-between rounded border border-white/10 p-3">
+                <li key={i.productId} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 hover:bg-white/10 hover:border-cyan-500/20 transition-all">
                   <div className="flex-1">
                     <div className="font-medium">{p?.name ?? 'Loading...'}</div>
                     <div className="flex items-center gap-2 mt-2">
