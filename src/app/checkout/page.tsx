@@ -375,8 +375,8 @@ export default function CheckoutPage() {
       </form>
 
       {/* Order summary */}
-      <div className="rounded border border-white/10 p-4">
-        <h2 className="mb-4 font-medium">Order summary</h2>
+      <div className="rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-6 backdrop-blur-sm">
+        <h2 className="mb-4 font-semibold text-lg">Order summary</h2>
 
         {products.length > 0 ? (
           <div className="space-y-4">
