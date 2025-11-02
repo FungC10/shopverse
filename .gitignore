@@ -39,3 +39,6 @@ next-env.d.ts
 prisma/migrations/*
 !prisma/migrations/.gitkeep
 
+# architecture (keep public version if needed)
+architecture.md
+
