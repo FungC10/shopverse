@@ -76,12 +76,12 @@ Expect: `ready - started server on http://localhost:3001`
    ```
 
 3. **Browse the app**:
-   - `/` – Product catalog (images via next/image)
-   - `/product/[slug]` – Product detail with Add to Cart
-   - `/cart` – Server-priced subtotal
-   - `/checkout` – Address form → Stripe Checkout
-   - `/success` – Receipt (after webhook confirms payment)
-   - `/cancel` – Payment canceled
+   - `/` – Product catalog grid (12 demo products, ISR cached)
+   - `/product/[slug]` – Product detail page with Add to Cart button
+   - `/cart` – Shopping cart with quantity controls and server-priced subtotal
+   - `/checkout` – Address form (RHF + Zod validation) → Stripe Checkout redirect
+   - `/success` – Full order receipt with masked email/address (webhook-aware polling)
+   - `/cancel` – Payment canceled (cart preserved)
 
 **Auth/Admin**: Not included by design (portfolio scope). Products are seeded. Enable an admin panel later if needed (see "Enhancements").
 
@@ -99,16 +99,44 @@ Open [http://localhost:3001](http://localhost:3001) in your browser.
 ## Features
 
 - **Guest Checkout**: No authentication required – customers can browse and purchase without accounts
-- **Product Catalog**: Browse products with images, descriptions, and pricing
+- **Product Catalog**: Browse products with images, descriptions, and pricing (ISR for performance)
+- **Product Search & Pagination**: API supports search (`?q=term`) and pagination (`?page=1&limit=12`)
 - **Shopping Cart**: Client-side cart with localStorage persistence and server-validated pricing
+- **Toast Notifications**: Accessible toast system with auto-dismiss and hover pause
 - **Stripe Checkout**: Secure payment processing with Stripe Checkout Sessions
-- **Order Management**: Webhook-based order persistence with receipt display
+- **Order Management**: Webhook-based order persistence with full receipt display (polling for race conditions)
 - **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
-- **Responsive Design**: Mobile-friendly UI with Tailwind CSS
+- **Responsive Design**: Mobile-friendly UI with Tailwind CSS dark theme
+
+## API Endpoints
+
+- `GET /api/products` – Products API
+  - `?ids=id1,id2` – Fetch specific products (for cart)
+  - `?page=1&limit=12` – Pagination (default page=1, limit=12, max limit=50)
+  - `?q=searchterm` – Case-insensitive search in name/description
+  - Returns: `{ products, page, limit, total, hasMore }`
+
+- `POST /api/checkout` – Create Stripe Checkout Session
+  - Body: `{ items: [{ productId, quantity }], address: {...}, promoCode?: string }`
+  - Returns: `{ id, url }` (redirect to `url`)
+
+- `POST /api/stripe/webhook` – Stripe webhook handler
+  - Verifies signature and persists orders on `checkout.session.completed`
+  - Returns: `{ received: true }` on success
+
+- `GET /api/orders/[id]` – Fetch order details
+- `GET /api/promo-codes/validate?code=XXX` – Validate promo code (if enabled)
 
 ## Project Structure
 
 See `architecture.md` for detailed architecture documentation.
+
+Key directories:
+- `src/app/` – Next.js App Router pages and API routes
+- `src/components/` – React components
+- `src/lib/` – Utilities (prisma, stripe, validation, etc.)
+- `src/data/` – Seed scripts
+- `prisma/` – Database schema and migrations
 
 ## Test Cards
 
