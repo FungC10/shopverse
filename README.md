@@ -20,6 +20,7 @@ pnpm install
      - `STRIPE_SECRET_KEY`
      - `STRIPE_WEBHOOK_SECRET`
      - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+   - **Optional**: Enable promo codes by setting `NEXT_PUBLIC_ENABLE_PROMO_CODES=true`
 
 4. Initialize database:
 ```bash
@@ -84,6 +85,49 @@ Use these test cards in Stripe Checkout:
 - CVC: Any 3 digits
 - ZIP: Any 5 digits
 
+## Promo Codes (Optional Feature)
+
+Promo codes allow customers to apply discounts at checkout using Stripe coupons.
+
+### Enabling Promo Codes
+
+1. Add to `.env.local`:
+   ```
+   NEXT_PUBLIC_ENABLE_PROMO_CODES=true
+   ```
+
+2. Restart your dev server
+
+3. The promo code input will appear on the checkout page
+
+### Creating Test Coupons in Stripe
+
+1. Go to [Stripe Dashboard → Coupons](https://dashboard.stripe.com/coupons)
+2. Click "Create coupon"
+3. Configure your coupon:
+   - **ID/Code**: Enter a code (e.g., `SAVE10`, `WELCOME20`)
+   - **Type**: Percentage off or Amount off
+   - **Value**: Discount amount (e.g., 10% or $5.00)
+   - **Duration**: Once, forever, or repeating
+   - **Redemption limits**: Optional (max redemptions, expiration)
+4. Save the coupon
+
+### Testing Promo Codes
+
+1. Enable the feature flag (`NEXT_PUBLIC_ENABLE_PROMO_CODES=true`)
+2. Add items to cart and go to checkout
+3. Enter a valid coupon code (must match exactly, case-insensitive)
+4. The code will be validated in real-time
+5. If valid, the discount will be applied in Stripe Checkout
+6. Complete the test payment to see the discounted amount
+
+### Promo Code Requirements
+
+- Codes must be 3-20 characters
+- Alphanumeric only (automatically converted to uppercase)
+- Must exist as a valid, non-expired coupon in your Stripe account
+- Applied at checkout session creation (discount visible in Stripe Checkout UI)
+
 ## Deployment (Vercel)
 
 ### Prerequisites
@@ -103,7 +147,7 @@ Add these environment variables in your Vercel project settings:
 - `STRIPE_WEBHOOK_SECRET` - Production webhook signing secret (see below)
 
 **Optional (Feature Flags):**
-- `NEXT_PUBLIC_ENABLE_PROMO_CODES` - Set to `"true"` to enable promo code feature (default: disabled)
+- `NEXT_PUBLIC_ENABLE_PROMO_CODES` - Set to `"true"` to enable promo code feature (default: disabled). When enabled, customers can enter promo codes at checkout to apply Stripe coupon discounts.
 
 ### Setting up Production Stripe Webhook
 
