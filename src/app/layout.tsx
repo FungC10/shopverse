@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { ReactNode } from 'react';
 import '@/styles/globals.css';
 import Navbar from '@/components/Navbar';
+import { ToastProvider } from '@/lib/useToast';
+import Toast from '@/components/Toast';
 
 export const metadata: Metadata = {
   title: 'ShopVerse',
@@ -12,8 +14,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-dvh bg-slate-950 text-slate-100 antialiased">
-        <Navbar />
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <ToastProvider>
+          <Navbar />
+          <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+          <Toast />
+        </ToastProvider>
       </body>
     </html>
   );

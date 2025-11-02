@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from '@/lib/useToast';
 
 export default function AddToCart({ productId }: { productId: string }) {
   const [busy, setBusy] = useState(false);
+  const { push } = useToast();
 
   return (
     <button
@@ -19,7 +21,8 @@ export default function AddToCart({ productId }: { productId: string }) {
         setBusy(false);
         // Dispatch event to update navbar cart count
         window.dispatchEvent(new Event('cartUpdated'));
-        // Optional: toast here
+        // Show toast notification
+        push({ title: 'Added', message: 'Item added to cart', variant: 'success' });
       }}
       className="rounded-md bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
