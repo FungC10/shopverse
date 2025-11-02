@@ -16,9 +16,12 @@ export const AddressSchema = z.object({
   country: z.string().length(2), // ISO-3166-1 alpha-2
 });
 
+export const PromoCodeSchema = z.string().min(3).max(20).regex(/^[A-Z0-9]+$/, 'Promo code must be uppercase alphanumeric');
+
 export const CheckoutSchema = z.object({
   items: z.array(CartItemSchema).min(1),
   address: AddressSchema,
+  promoCode: z.string().optional(),
 });
 
 export type CheckoutPayload = z.infer<typeof CheckoutSchema>;

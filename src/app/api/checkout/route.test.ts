@@ -10,6 +10,9 @@ vi.mock('@/lib/stripe', () => ({
         create: vi.fn(),
       },
     },
+    coupons: {
+      list: vi.fn(),
+    },
   },
 }));
 
@@ -24,6 +27,7 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/lib/env', () => ({
   env: {
     NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+    NEXT_PUBLIC_ENABLE_PROMO_CODES: true,
   },
 }));
 
@@ -149,6 +153,108 @@ describe('POST /api/checkout', () => {
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('Some products not found or inactive');
+    expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it('applies valid promo code to checkout session', async () => {
+    const mockProducts = [
+      {
+        id: 'clx12345678901234567890',
+        name: 'Test Product',
+        unitAmount: 1999,
+        currency: 'usd',
+        imageUrl: 'https://example.com/image.jpg',
+        active: true,
+      },
+    ];
+
+    const mockCoupon = {
+      id: 'coupon_test123',
+      code: 'SAVE10',
+      valid: true,
+      deleted: false,
+      percent_off: 10,
+    };
+
+    const mockSession = {
+      id: 'cs_test_123',
+      url: 'https://checkout.stripe.com/pay/cs_test_123',
+    };
+
+    (prisma.product.findMany as any).mockResolvedValue(mockProducts);
+    (stripe.coupons.list as any).mockResolvedValue({ data: [mockCoupon] });
+    (stripe.checkout.sessions.create as any).mockResolvedValue(mockSession);
+
+    const payload = {
+      items: [{ productId: 'clx12345678901234567890', quantity: 2 }],
+      address: {
+        email: 'test@example.com',
+        name: 'John Doe',
+        addressLine1: '123 Main St',
+        city: 'New York',
+        postalCode: '10001',
+        country: 'US',
+      },
+      promoCode: 'SAVE10',
+    };
+
+    const req = new NextRequest('http://localhost:3000/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(stripe.checkout.sessions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        discounts: [{ coupon: 'coupon_test123' }],
+      }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) })
+    );
+  });
+
+  it('rejects invalid promo code', async () => {
+    const mockProducts = [
+      {
+        id: 'clx12345678901234567890',
+        name: 'Test Product',
+        unitAmount: 1999,
+        currency: 'usd',
+        imageUrl: 'https://example.com/image.jpg',
+        active: true,
+      },
+    ];
+
+    (prisma.product.findMany as any).mockResolvedValue(mockProducts);
+    (stripe.coupons.list as any).mockResolvedValue({ data: [] });
+
+    const payload = {
+      items: [{ productId: 'clx12345678901234567890', quantity: 1 }],
+      address: {
+        email: 'test@example.com',
+        name: 'John Doe',
+        addressLine1: '123 Main St',
+        city: 'New York',
+        postalCode: '10001',
+        country: 'US',
+      },
+      promoCode: 'INVALID',
+    };
+
+    const req = new NextRequest('http://localhost:3000/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const response = await POST(req);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.error).toBe('Invalid or expired promo code');
     expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
   });
 });

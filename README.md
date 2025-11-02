@@ -102,6 +102,9 @@ Add these environment variables in your Vercel project settings:
 - `NEXT_PUBLIC_APP_URL` - Your production URL (e.g., `https://your-app.vercel.app`)
 - `STRIPE_WEBHOOK_SECRET` - Production webhook signing secret (see below)
 
+**Optional (Feature Flags):**
+- `NEXT_PUBLIC_ENABLE_PROMO_CODES` - Set to `"true"` to enable promo code feature (default: disabled)
+
 ### Setting up Production Stripe Webhook
 
 1. Deploy your app to Vercel first (get the production URL)

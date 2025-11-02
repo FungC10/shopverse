@@ -52,15 +52,39 @@ export async function POST(req: NextRequest) {
       };
     });
 
+    // Validate and apply promo code if provided
+    let discounts = undefined;
+    if (parsed.data.promoCode && env.NEXT_PUBLIC_ENABLE_PROMO_CODES) {
+      try {
+        const coupons = await stripe.coupons.list({ code: parsed.data.promoCode.toUpperCase(), limit: 1 });
+        if (coupons.data.length > 0 && coupons.data[0].valid && !coupons.data[0].deleted) {
+          discounts = [{ coupon: coupons.data[0].id }];
+        } else {
+          return NextResponse.json(
+            { error: 'Invalid or expired promo code' },
+            { status: 400 }
+          );
+        }
+      } catch (error) {
+        console.error('Error validating promo code:', error);
+        return NextResponse.json(
+          { error: 'Failed to validate promo code' },
+          { status: 500 }
+        );
+      }
+    }
+
     const session = await stripe.checkout.sessions.create(
       {
         mode: 'payment',
         line_items,
+        ...(discounts && { discounts }),
         success_url: `${env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${env.NEXT_PUBLIC_APP_URL}/cancel`,
         customer_email: parsed.data.address.email,
         metadata: {
           cart: JSON.stringify(parsed.data.items),
+          ...(parsed.data.promoCode && { promoCode: parsed.data.promoCode }),
         },
         shipping_address_collection: {
           allowed_countries: ['US', 'CA', 'HK'],

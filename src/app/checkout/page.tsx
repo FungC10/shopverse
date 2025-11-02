@@ -11,6 +11,7 @@ import Price from '@/components/Price';
 import EmptyState from '@/components/EmptyState';
 import Loading from '@/components/Loading';
 import AddressForm from '@/components/AddressForm';
+import PromoCodeInput from '@/components/PromoCodeInput';
 
 interface Product {
   id: string;
@@ -27,6 +28,9 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [isFormValid, setIsFormValid] = useState(false);
   const [formData, setFormData] = useState<Address | null>(null);
+  const [promoCode, setPromoCode] = useState('');
+  const [isPromoValid, setIsPromoValid] = useState(false);
+  const [promoError, setPromoError] = useState<string | undefined>();
   const storedEmail = getStoredEmail();
 
   useEffect(() => {
@@ -62,8 +66,31 @@ export default function CheckoutPage() {
   const handleFinalSubmit = async () => {
     if (!formData) return;
 
-    // TODO: Submit to /api/checkout
-    console.log('Checkout submitted:', { items: cartItems, address: formData });
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: cartItems,
+          address: formData,
+          promoCode: promoCode && isPromoValid ? promoCode : undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Checkout failed');
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setPromoError(error instanceof Error ? error.message : 'Failed to process checkout');
+    }
   };
 
   const subtotal = total(
@@ -114,6 +141,17 @@ export default function CheckoutPage() {
               onSubmit={handleAddressSubmit}
               onValidityChange={setIsFormValid}
             />
+            <div className="mt-6">
+              <PromoCodeInput
+                value={promoCode}
+                onChange={(code) => {
+                  setPromoCode(code);
+                  setPromoError(undefined);
+                }}
+                onValidation={setIsPromoValid}
+                error={promoError}
+              />
+            </div>
           </div>
 
           {/* Order Summary */}

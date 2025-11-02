@@ -11,6 +11,9 @@ const envSchema = z.object({
   
   // App
   NEXT_PUBLIC_APP_URL: z.string().url('NEXT_PUBLIC_APP_URL must be a valid URL'),
+  
+  // Feature flags
+  NEXT_PUBLIC_ENABLE_PROMO_CODES: z.string().optional().transform((val) => val === 'true'),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -23,6 +26,7 @@ function getEnv(): Env {
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
       DATABASE_URL: process.env.DATABASE_URL,
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+      NEXT_PUBLIC_ENABLE_PROMO_CODES: process.env.NEXT_PUBLIC_ENABLE_PROMO_CODES,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
