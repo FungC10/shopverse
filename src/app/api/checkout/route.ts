@@ -22,9 +22,15 @@ export async function POST(req: NextRequest) {
       where: { id: { in: ids }, active: true },
     });
 
+    // Validate all products exist and are active
     if (products.length !== ids.length) {
+      const foundIds = products.map((p) => p.id);
+      const missingIds = ids.filter((id) => !foundIds.includes(id));
       return NextResponse.json(
-        { error: 'Some products not found or inactive' },
+        {
+          error: 'Some products not found or inactive',
+          details: `Missing product IDs: ${missingIds.join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -66,6 +72,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id: session.id, url: session.url });
   } catch (error) {
     console.error('Checkout error:', error);
+    
+    // Handle Stripe-specific errors
+    if (error instanceof Error && 'type' in error) {
+      return NextResponse.json(
+        { error: 'Stripe error', message: error.message },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }
