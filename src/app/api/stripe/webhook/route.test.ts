@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { POST } from './route';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
@@ -27,7 +26,18 @@ vi.mock('@/lib/prisma', () => ({
       deleteMany: vi.fn(),
       createMany: vi.fn(),
     },
-    $transaction: vi.fn((ops) => Promise.all(ops.map((op: any) => op()))),
+    $transaction: vi.fn(async (ops: any[]) => {
+      // Execute each operation in the transaction
+      const results = [];
+      for (const op of ops) {
+        if (typeof op === 'function') {
+          results.push(await op());
+        } else {
+          results.push(await op);
+        }
+      }
+      return results;
+    }),
   },
 }));
 
@@ -35,9 +45,18 @@ vi.mock('next/headers', () => ({
   headers: vi.fn(),
 }));
 
+// Import the POST handler
+let POST: typeof import('./route').POST;
+
+beforeAll(async () => {
+  const module = await import('./route');
+  POST = module.POST;
+});
+
 describe('POST /api/stripe/webhook - OrderItem persistence', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
     (headers as any).mockResolvedValue({
       get: () => 'valid-signature',
     });
@@ -99,6 +118,9 @@ describe('POST /api/stripe/webhook - OrderItem persistence', () => {
     const req = new Request('http://localhost:3000/api/stripe/webhook', {
       method: 'POST',
       body: JSON.stringify(mockEvent),
+      headers: {
+        'stripe-signature': 'valid-signature',
+      },
     });
 
     const response = await POST(req);
@@ -167,6 +189,9 @@ describe('POST /api/stripe/webhook - OrderItem persistence', () => {
     const req = new Request('http://localhost:3000/api/stripe/webhook', {
       method: 'POST',
       body: JSON.stringify(mockEvent),
+      headers: {
+        'stripe-signature': 'valid-signature',
+      },
     });
 
     const response = await POST(req);
@@ -175,10 +200,8 @@ describe('POST /api/stripe/webhook - OrderItem persistence', () => {
 
     // Should delete old items but not create new ones (filtered out)
     expect(prisma.orderItem.deleteMany).toHaveBeenCalled();
-    // createMany should be called with empty array or skipped
-    expect(prisma.orderItem.createMany).toHaveBeenCalledWith({
-      data: [],
-    });
+    // createMany should not be called when itemsForDb is empty (spread operator skips it)
+    expect(prisma.orderItem.createMany).not.toHaveBeenCalled();
   });
 
   it('handles idempotency correctly (replaces items on duplicate webhook)', async () => {
