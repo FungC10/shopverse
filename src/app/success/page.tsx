@@ -166,38 +166,45 @@ export default function SuccessPage() {
           )}
 
           {/* Order Items */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Items</h3>
-            <div className="space-y-4">
-              {order.items.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <Link
-                    href={routes.product(item.product.slug)}
-                    className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden"
-                  >
-                    <Image
-                      src={item.product.imageUrl}
-                      alt={item.product.name}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
-                    />
-                  </Link>
-                  <div className="flex-1">
+          {order.items && order.items.length > 0 ? (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Items</h3>
+              <div className="space-y-4">
+                {order.items.map((item) => (
+                  <div key={item.id} className="flex gap-4">
                     <Link
                       href={routes.product(item.product.slug)}
-                      className="text-cyan-300 font-semibold hover:text-cyan-200"
+                      className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden"
                     >
-                      {item.product.name}
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
                     </Link>
-                    <div className="text-slate-400 text-sm mt-1">
-                      Quantity: {item.quantity} × <Price unitAmount={item.unitAmount} currency={order.currency} />
+                    <div className="flex-1">
+                      <Link
+                        href={routes.product(item.product.slug)}
+                        className="text-cyan-300 font-semibold hover:text-cyan-200"
+                      >
+                        {item.product.name}
+                      </Link>
+                      <div className="text-slate-400 text-sm mt-1">
+                        Quantity: {item.quantity} × <Price unitAmount={item.unitAmount} currency={order.currency} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Order Summary</h3>
+              <p className="text-slate-400">Items details will be available shortly.</p>
+            </div>
+          )}
 
           {/* Totals */}
           <div className="border-t border-slate-700 pt-4">
