@@ -150,7 +150,7 @@ async function main() {
         slug: 'cosmic-power-bank',
         name: 'Cosmic Power Bank',
         description: '20,000mAh portable charger with wireless charging.',
-        imageUrl: 'https://images.unsplash.com/photo-1517225223792-6b7feb2cbdfa?w=1200&auto=format&fit=crop',
+        imageUrl: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=1200&auto=format&fit=crop',
         currency: 'usd',
         unitAmount: 4900, // $49.00
         active: true,
