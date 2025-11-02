@@ -8,12 +8,27 @@ import { z } from 'zod';
 import { getStoredEmail } from '@/lib/cart';
 import { useToast } from '@/lib/useToast';
 import Link from 'next/link';
+import Image from 'next/image';
 import ErrorState from '@/components/ErrorState';
+import Price from '@/components/Price';
+
+interface Product {
+  id: string;
+  name: string;
+  imageUrl: string;
+  unitAmount: number;
+  currency: string;
+}
 
 export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [items, setItems] = useState<{ productId: string; quantity: number }[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [promoCode, setPromoCode] = useState<string>('');
+  const [promoValid, setPromoValid] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState<{ type: 'percentage' | 'fixed'; value: number } | null>(null);
+  const [enablePromoCodes, setEnablePromoCodes] = useState(false);
   const toast = useToast();
 
   const form = useForm<z.infer<typeof AddressSchema>>({
@@ -91,7 +106,11 @@ export default function CheckoutPage() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, address }),
+        body: JSON.stringify({
+          items,
+          address,
+          ...(enablePromoCodes && promoCode && promoValid && { promoCode }),
+        }),
       });
 
       if (!res.ok) {
@@ -230,6 +249,45 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* Promo code input (if feature enabled) */}
+        {enablePromoCodes && (
+          <div>
+            <input
+              type="text"
+              placeholder="Promo code (optional)"
+              value={promoCode}
+              onChange={async (e) => {
+                const code = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                setPromoCode(code);
+                setPromoValid(false);
+                setPromoDiscount(null);
+
+                if (code.length >= 3) {
+                  try {
+                    const res = await fetch(`/api/promo-codes/validate?code=${encodeURIComponent(code)}`);
+                    const data = await res.json();
+                    if (data.valid) {
+                      setPromoValid(true);
+                      setPromoDiscount({
+                        type: data.discountType || 'percentage',
+                        value: data.discount || 0,
+                      });
+                    }
+                  } catch {
+                    // Validation failed silently
+                  }
+                }
+              }}
+              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
+            {promoValid && promoDiscount && (
+              <p className="mt-1 text-xs text-green-400">
+                ✓ Discount applied: {promoDiscount.type === 'percentage' ? `${promoDiscount.value}%` : `$${(promoDiscount.value / 100).toFixed(2)}`}
+              </p>
+            )}
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={!form.formState.isValid || isSubmitting || isEmpty}
@@ -258,10 +316,112 @@ export default function CheckoutPage() {
         </button>
       </form>
 
-      {/* Simple summary */}
+      {/* Order summary */}
       <div className="rounded border border-white/10 p-4">
-        <h2 className="mb-2 font-medium">Order summary</h2>
-        <p className="text-sm text-slate-400">Prices will be validated server-side.</p>
+        <h2 className="mb-4 font-medium">Order summary</h2>
+
+        {products.length > 0 ? (
+          <div className="space-y-4">
+            {/* Line items */}
+            <div className="space-y-3">
+              {items.map((item) => {
+                const product = products.find((p) => p.id === item.productId);
+                if (!product) return null;
+
+                const lineTotal = product.unitAmount * item.quantity;
+
+                return (
+                  <div key={item.productId} className="flex gap-3">
+                    <div className="relative w-16 h-16 flex-shrink-0 rounded border border-white/10 overflow-hidden">
+                      <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{product.name}</p>
+                      <p className="text-xs text-slate-400">Qty: {item.quantity}</p>
+                      <p className="text-sm text-cyan-300 mt-1">
+                        <Price amount={lineTotal} currency={product.currency} />
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-white/10 pt-3 space-y-2">
+              {/* Subtotal */}
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Subtotal</span>
+                <span className="font-medium">
+                  {products.length > 0 && items.length > 0 ? (
+                    <Price
+                      amount={items.reduce((s, i) => {
+                        const p = products.find((x) => x.id === i.productId);
+                        return s + (p?.unitAmount ?? 0) * i.quantity;
+                      }, 0)}
+                      currency={products[0]?.currency || 'usd'}
+                    />
+                  ) : (
+                    '$0.00'
+                  )}
+                </span>
+              </div>
+
+              {/* Promo discount (if enabled and applied) */}
+              {enablePromoCodes && promoValid && promoDiscount && (
+                <div className="flex justify-between text-sm text-green-400">
+                  <span>Discount {promoCode}</span>
+                  <span>
+                    {promoDiscount.type === 'percentage' ? (
+                      `-${promoDiscount.value}%`
+                    ) : (
+                      <Price amount={-promoDiscount.value} currency="usd" />
+                    )}
+                  </span>
+                </div>
+              )}
+
+              {/* Total */}
+              <div className="flex justify-between text-base font-semibold pt-2 border-t border-white/10">
+                <span>Total</span>
+                <span className="text-cyan-300">
+                  {products.length > 0 && items.length > 0 ? (
+                    <Price
+                      amount={
+                        items.reduce((s, i) => {
+                          const p = products.find((x) => x.id === i.productId);
+                          return s + (p?.unitAmount ?? 0) * i.quantity;
+                        }, 0) -
+                        (promoValid && promoDiscount
+                          ? promoDiscount.type === 'percentage'
+                            ? Math.round(
+                                items.reduce((s, i) => {
+                                  const p = products.find((x) => x.id === i.productId);
+                                  return s + (p?.unitAmount ?? 0) * i.quantity;
+                                }, 0) *
+                                  (promoDiscount.value / 100)
+                              )
+                            : promoDiscount.value
+                          : 0)
+                      }
+                      currency={products[0]?.currency || 'usd'}
+                    />
+                  ) : (
+                    '$0.00'
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-slate-400">Loading order summary...</p>
+        )}
       </div>
     </div>
   );
