@@ -19,8 +19,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   }
 
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Image */}
           <div>
@@ -50,6 +50,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
       </div>
-    </main>
+    </>
   );
 }

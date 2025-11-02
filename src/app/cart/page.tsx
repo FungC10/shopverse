@@ -73,8 +73,8 @@ export default function CartPage() {
   const currency = cartItems.length > 0 && products.size > 0 ? Array.from(products.values())[0]?.currency || 'usd' : 'usd';
 
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto">
+    <>
+      <div>
         <h1 className="text-4xl font-bold text-cyan-300 mb-8">Shopping Cart</h1>
 
         {loading ? (
@@ -171,6 +171,6 @@ export default function CartPage() {
           </>
         )}
       </div>
-    </main>
+    </>
   );
 }

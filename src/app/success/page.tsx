@@ -108,10 +108,9 @@ export default function SuccessPage() {
   }
 
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Success Header */}
-        <div className="text-center mb-8">
+    <>
+      {/* Success Header */}
+      <div className="text-center mb-8">
           <div className="inline-block p-4 bg-green-500/20 rounded-full mb-4">
             <svg
               className="w-16 h-16 text-green-400"
@@ -219,16 +218,15 @@ export default function SuccessPage() {
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="text-center">
-          <Link
-            href={routes.home}
-            className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors mr-4"
-          >
-            Continue Shopping
-          </Link>
-        </div>
+      {/* Actions */}
+      <div className="text-center">
+        <Link
+          href={routes.home}
+          className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors mr-4"
+        >
+          Continue Shopping
+        </Link>
       </div>
-    </main>
+    </>
   );
 }

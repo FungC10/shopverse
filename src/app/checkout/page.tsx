@@ -123,13 +123,13 @@ export default function CheckoutPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <div className="mx-auto max-w-6xl">
         <h1 className="text-4xl font-bold text-cyan-300 mb-8">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -214,6 +214,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
-    </main>
+    </>
   );
 }

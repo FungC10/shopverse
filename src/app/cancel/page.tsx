@@ -3,8 +3,8 @@ import { routes } from '@/lib/routes';
 
 export default function CancelPage() {
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-2xl mx-auto">
+    <>
+      <div>
         <div className="text-center">
           <div className="inline-block p-4 bg-red-500/20 rounded-full mb-4">
             <svg
@@ -41,6 +41,6 @@ export default function CancelPage() {
           </div>
         </div>
       </div>
-    </main>
+    </>
   );
 }
