@@ -125,7 +125,7 @@ export default function CartPage() {
                       />
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="font-medium">{p?.name ?? 'Loading...'}</div>
                     <div className="flex items-center gap-2 mt-2">
                       <button
@@ -149,7 +149,7 @@ export default function CartPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="text-cyan-300 ml-4">
+                  <div className="text-cyan-300 ml-4 flex-shrink-0">
                     {p
                       ? new Intl.NumberFormat('en-US', {
                           style: 'currency',
