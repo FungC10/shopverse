@@ -129,9 +129,8 @@ Add these environment variables in your Vercel project settings:
 1. Connect your GitHub repository to Vercel
 
 2. Vercel will automatically:
-   - Run `pnpm install`
-   - Run `pnpm db:generate` (via postinstall)
-   - Run `pnpm db:migrate:deploy` (via buildCommand)
+   - Run `pnpm install` (triggers `postinstall` → `prisma generate`)
+   - Run `pnpm db:migrate:deploy` (via buildCommand in vercel.json)
    - Run `pnpm build`
 
 3. Your app should be live at `https://your-app.vercel.app`
