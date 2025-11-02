@@ -420,24 +420,6 @@ export default function CheckoutPage() {
 
             {/* Divider */}
             <div className="border-t border-white/10 pt-3 space-y-2">
-              {/* Subtotal */}
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Subtotal</span>
-                <span className="font-medium">
-                  {products.length > 0 && items.length > 0 ? (
-                    <Price
-                      amount={items.reduce((s, i) => {
-                        const p = products.find((x) => x.id === i.productId);
-                        return s + (p?.unitAmount ?? 0) * i.quantity;
-                      }, 0)}
-                      currency={products[0]?.currency || 'usd'}
-                    />
-                  ) : (
-                    '$0.00'
-                  )}
-                </span>
-              </div>
-
               {/* Promo discount (if enabled and applied) */}
               {enablePromoCodes && promoValid && promoDiscount && (
                 <div className="flex justify-between text-sm text-green-400">

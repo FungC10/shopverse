@@ -111,7 +111,7 @@ export default function CartPage() {
             })}
           </ul>
           <div className="flex items-center justify-between border-t border-white/10 pt-4">
-            <span className="text-slate-400">Subtotal</span>
+            <span className="text-slate-400">Total</span>
             <span className="text-lg text-cyan-300">
               {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal / 100)}
             </span>
