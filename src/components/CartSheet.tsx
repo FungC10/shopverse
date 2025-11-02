@@ -200,7 +200,8 @@ export default function CartSheet({ isOpen, onClose }: CartSheetProps) {
                           max="10"
                           value={item.quantity}
                           onChange={(e) => handleQtyChange(item.productId, parseInt(e.target.value) || 1)}
-                          className="w-12 text-center bg-white/10 rounded px-2 py-1 text-white"
+                          className="w-12 text-center bg-white/10 rounded px-2 py-1 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+                          aria-label={`Quantity of ${product.name}`}
                         />
                         <button
                           onClick={() => handleQtyChange(item.productId, item.quantity + 1)}
