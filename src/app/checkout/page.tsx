@@ -74,6 +74,28 @@ export default function CheckoutPage() {
     setItems(raw ? JSON.parse(raw) : []);
   }, []);
 
+  // Fetch products for order summary
+  useEffect(() => {
+    if (!items.length) {
+      setProducts([]);
+      return;
+    }
+
+    const fetchProducts = async () => {
+      try {
+        const ids = items.map((i) => i.productId).join(',');
+        const res = await fetch(`/api/products?ids=${ids}`, { cache: 'no-store' });
+        const { products: fetchedProducts } = await res.json();
+        setProducts(fetchedProducts || []);
+      } catch (error) {
+        console.error('Failed to fetch products for summary:', error);
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, [items]);
+
   // Cart validation: remove unavailable products on mount (run once after items load)
   useEffect(() => {
     if (!items.length) return;
