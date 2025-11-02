@@ -265,6 +265,37 @@ Add these environment variables in your Vercel project settings:
   - Check Stripe Dashboard → Webhooks → Recent events for delivery status
   - Ensure production URL is accessible (not blocked by firewall)
 
+## Testing
+
+Run tests with Vitest:
+```bash
+pnpm test
+```
+
+### Test Coverage
+
+**Unit Tests:**
+- `lib/currency.test.ts` - Price formatting utilities
+- `lib/cart.test.ts` - Cart localStorage helpers
+- `lib/validation.test.ts` - Zod schema validation
+
+**Component Tests:**
+- `components/ProductCard.test.tsx` - Product card rendering
+- `components/AddressForm.test.tsx` - Form validation and submission
+- `components/PromoCodeInput.test.tsx` - Promo code input (optional feature)
+
+**API Route Tests:**
+- `app/api/checkout/route.test.ts` - Checkout session creation with mocked Stripe
+- `app/api/stripe/webhook/route.test.ts` - Webhook signature verification
+- `app/api/promo-codes/validate/route.test.ts` - Promo code validation
+
+**Important Test Scenarios:**
+- ✅ Invalid form data rejection
+- ✅ Stripe webhook signature verification
+- ✅ Server-side price validation
+- ✅ Promo code validation (when enabled)
+- ✅ Cart operations (add, update, remove)
+
 ## Scripts
 
 - `pnpm dev` - Start development server (port 3001)
@@ -275,7 +306,7 @@ Add these environment variables in your Vercel project settings:
 - `pnpm db:migrate:deploy` - Run database migrations (production)
 - `pnpm db:seed` - Seed database with sample products
 - `pnpm db:studio` - Open Prisma Studio
-- `pnpm test` - Run tests
+- `pnpm test` - Run tests (Vitest)
 - `pnpm lint` - Run ESLint
 - `pnpm typecheck` - Type check without emitting
 - `pnpm format` - Format code with Prettier
