@@ -6,8 +6,6 @@ Minimal, modern e-commerce demo from product list → cart → Stripe Checkout �
 
 1. Install dependencies:
 ```bash
-npm install
-# or
 pnpm install
 ```
 
@@ -25,16 +23,14 @@ pnpm install
 
 4. Initialize database:
 ```bash
-npm run db:generate
-npm run db:migrate
-npm run db:seed
+pnpm db:generate
+pnpm db:migrate
+pnpm db:seed
 ```
 
 5. Run the development server (always on port 3000):
 ```bash
-pnpm dev -p 3000
-# or
-npm run dev
+pnpm dev
 ```
 Expect: `ready - started server on http://localhost:3000`
 
@@ -42,7 +38,7 @@ Expect: `ready - started server on http://localhost:3000`
    
    **Terminal A** - Start dev server:
    ```bash
-   pnpm dev -p 3000
+   pnpm dev
    ```
    
    **Terminal B** - Start Stripe webhook listener:
@@ -90,12 +86,15 @@ Use these test cards in Stripe Checkout:
 
 ## Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with sample products
-- `npm run db:studio` - Open Prisma Studio
-- `npm run test` - Run tests
-- `npm run lint` - Run ESLint
+- `pnpm dev` - Start development server (port 3000)
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm db:generate` - Generate Prisma client
+- `pnpm db:migrate` - Run database migrations
+- `pnpm db:seed` - Seed database with sample products
+- `pnpm db:studio` - Open Prisma Studio
+- `pnpm test` - Run tests
+- `pnpm lint` - Run ESLint
+- `pnpm typecheck` - Type check without emitting
+- `pnpm format` - Format code with Prettier
+- `pnpm check:orders` - Check recent orders in database
