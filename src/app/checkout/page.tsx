@@ -1,219 +1,175 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AddressSchema } from '@/lib/validation';
+import { z } from 'zod';
+import { getStoredEmail } from '@/lib/cart';
 import Link from 'next/link';
-import { type Address } from '@/lib/validation';
-import { getCart, saveEmail, getStoredEmail } from '@/lib/cart';
-import { total } from '@/lib/cart';
-import { routes } from '@/lib/routes';
-import Price from '@/components/Price';
-import EmptyState from '@/components/EmptyState';
-import Loading from '@/components/Loading';
-import AddressForm from '@/components/AddressForm';
-import PromoCodeInput from '@/components/PromoCodeInput';
-
-interface Product {
-  id: string;
-  name: string;
-  unitAmount: number;
-  currency: string;
-  imageUrl: string;
-  slug: string;
-}
 
 export default function CheckoutPage() {
-  const [cartItems, setCartItems] = useState(getCart());
-  const [products, setProducts] = useState<Map<string, Product>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [isFormValid, setIsFormValid] = useState(false);
-  const [formData, setFormData] = useState<Address | null>(null);
-  const [promoCode, setPromoCode] = useState('');
-  const [isPromoValid, setIsPromoValid] = useState(false);
-  const [promoError, setPromoError] = useState<string | undefined>();
-  const storedEmail = getStoredEmail();
+  const form = useForm<z.infer<typeof AddressSchema>>({
+    resolver: zodResolver(AddressSchema),
+    defaultValues: {
+      email: typeof window !== 'undefined' ? getStoredEmail() || '' : '',
+      name: '',
+      addressLine1: '',
+      addressLine2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'US',
+    },
+    mode: 'onChange',
+  });
 
-  useEffect(() => {
-    if (cartItems.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/products');
-        const allProducts: Product[] = await response.json();
-        const productMap = new Map<string, Product>();
-        allProducts.forEach((p) => productMap.set(p.id, p));
-        setProducts(productMap);
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
-  const handleAddressSubmit = (address: Address) => {
-    setFormData(address);
-    // Save email to localStorage
-    saveEmail(address.email);
-    // TODO: Submit to /api/checkout will use formData
-  };
-
-  const handleFinalSubmit = async () => {
-    if (!formData) return;
+  const onSubmit = async (address: z.infer<typeof AddressSchema>) => {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
+    const items = raw ? JSON.parse(raw) : [];
 
     try {
-      const response = await fetch('/api/checkout', {
+      const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: cartItems,
-          address: formData,
-          promoCode: promoCode && isPromoValid ? promoCode : undefined,
-        }),
+        body: JSON.stringify({ items, address }),
       });
 
-      const data = await response.json();
+      const json = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Checkout failed');
+      if (!res.ok) {
+        throw new Error(json.error || 'Checkout failed');
       }
 
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
+      if (json?.url) {
+        window.location.href = json.url;
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      setPromoError(error instanceof Error ? error.message : 'Failed to process checkout');
+      // TODO: Show error to user
     }
   };
 
-  const subtotal = total(
-    cartItems,
-    new Map(
-      Array.from(products.entries()).map(([id, p]) => [id, { unitAmount: p.unitAmount, currency: p.currency }])
-    )
-  );
+  const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
+  const items = raw ? JSON.parse(raw) : [];
 
-  const currency = cartItems.length > 0 && products.size > 0 ? Array.from(products.values())[0]?.currency || 'usd' : 'usd';
-
-  if (loading) {
-    return <Loading />;
-  }
-
-  if (cartItems.length === 0) {
+  if (items.length === 0) {
     return (
-      <>
-        <EmptyState
-          title="Your cart is empty"
-          message="Add some products before checking out."
-        />
-        <div className="text-center mt-8">
-          <Link
-            href={routes.home}
-            className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors"
-          >
-            Browse Products
-          </Link>
-        </div>
-      </>
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold">Checkout</h1>
+        <p className="text-slate-400">Cart is empty. <Link className="text-cyan-300" href="/">Browse products</Link></p>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="mx-auto max-w-6xl">
-        <h1 className="text-4xl font-bold text-cyan-300 mb-8">Checkout</h1>
+    <div className="grid gap-8 md:grid-cols-2">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <h1 className="text-xl font-semibold">Checkout</h1>
+        
+        <div>
+          <input
+            placeholder="Email"
+            {...form.register('email')}
+            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          />
+          {form.formState.errors.email && (
+            <p className="mt-1 text-sm text-red-400">{form.formState.errors.email.message}</p>
+          )}
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Address Form */}
+        <div>
+          <input
+            placeholder="Name"
+            {...form.register('name')}
+            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          />
+          {form.formState.errors.name && (
+            <p className="mt-1 text-sm text-red-400">{form.formState.errors.name.message}</p>
+          )}
+        </div>
+
+        <div>
+          <input
+            placeholder="Address line 1"
+            {...form.register('addressLine1')}
+            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          />
+          {form.formState.errors.addressLine1 && (
+            <p className="mt-1 text-sm text-red-400">{form.formState.errors.addressLine1.message}</p>
+          )}
+        </div>
+
+        <div>
+          <input
+            placeholder="Address line 2 (optional)"
+            {...form.register('addressLine2')}
+            className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          />
+          {form.formState.errors.addressLine2 && (
+            <p className="mt-1 text-sm text-red-400">{form.formState.errors.addressLine2.message}</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-6">Shipping Information</h2>
-            <AddressForm
-              defaultEmail={storedEmail || ''}
-              onSubmit={handleAddressSubmit}
-              onValidityChange={setIsFormValid}
+            <input
+              placeholder="City"
+              {...form.register('city')}
+              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
             />
-            <div className="mt-6">
-              <PromoCodeInput
-                value={promoCode}
-                onChange={(code) => {
-                  setPromoCode(code);
-                  setPromoError(undefined);
-                }}
-                onValidation={setIsPromoValid}
-                error={promoError}
-              />
-            </div>
+            {form.formState.errors.city && (
+              <p className="mt-1 text-sm text-red-400">{form.formState.errors.city.message}</p>
+            )}
           </div>
-
-          {/* Order Summary */}
           <div>
-            <h2 className="text-2xl font-semibold text-white mb-6">Order Summary</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 space-y-4">
-              {/* Cart Items */}
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                {cartItems.map((item) => {
-                  const product = products.get(item.productId);
-                  if (!product) return null;
-
-                  return (
-                    <div key={item.productId} className="flex gap-4">
-                      <Link
-                        href={routes.product(product.slug)}
-                        className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden"
-                      >
-                        <Image
-                          src={product.imageUrl}
-                          alt={product.name}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          href={routes.product(product.slug)}
-                          className="block text-cyan-300 font-semibold hover:text-cyan-200 mb-1 truncate"
-                        >
-                          {product.name}
-                        </Link>
-                        <div className="text-slate-400 text-sm">
-                          Qty: {item.quantity} × <Price amount={product.unitAmount} currency={product.currency} />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Subtotal */}
-              <div className="border-t border-slate-700 pt-4 mt-4">
-                <div className="flex justify-between items-center text-xl mb-6">
-                  <span className="text-slate-400">Subtotal:</span>
-                  <span className="text-cyan-300">
-                    <Price amount={subtotal} currency={currency} />
-                  </span>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  onClick={handleFinalSubmit}
-                  disabled={!isFormValid}
-                  className="w-full px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 active:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900"
-                >
-                  Continue to Payment
-                </button>
-              </div>
-            </div>
+            <input
+              placeholder="State (optional)"
+              {...form.register('state')}
+              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
+            {form.formState.errors.state && (
+              <p className="mt-1 text-sm text-red-400">{form.formState.errors.state.message}</p>
+            )}
           </div>
         </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <input
+              placeholder="Postal code"
+              {...form.register('postalCode')}
+              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
+            {form.formState.errors.postalCode && (
+              <p className="mt-1 text-sm text-red-400">{form.formState.errors.postalCode.message}</p>
+            )}
+          </div>
+          <div>
+            <input
+              placeholder="Country (US/CA/HK)"
+              {...form.register('country')}
+              className="w-full rounded bg-white/10 border border-white/20 p-2 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            />
+            {form.formState.errors.country && (
+              <p className="mt-1 text-sm text-red-400">{form.formState.errors.country.message}</p>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={!form.formState.isValid}
+          className="rounded bg-cyan-500 px-4 py-2 font-medium text-slate-950 hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Pay with Stripe
+        </button>
+      </form>
+
+      {/* Simple summary */}
+      <div className="rounded border border-white/10 p-4">
+        <h2 className="mb-2 font-medium">Order summary</h2>
+        <p className="text-sm text-slate-400">Prices will be validated server-side.</p>
       </div>
-    </>
+    </div>
   );
 }
