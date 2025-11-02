@@ -29,11 +29,11 @@ pnpm db:migrate
 pnpm db:seed
 ```
 
-5. Run the development server (always on port 3000):
+5. Run the development server (port 3001):
 ```bash
 pnpm dev
 ```
-Expect: `ready - started server on http://localhost:3000`
+Expect: `ready - started server on http://localhost:3001`
 
 6. For local webhook testing with Stripe CLI:
    
@@ -44,7 +44,7 @@ Expect: `ready - started server on http://localhost:3000`
    
    **Terminal B** - Start Stripe webhook listener:
    ```bash
-   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   stripe listen --forward-to localhost:3001/api/stripe/webhook
    ```
    - Copy the webhook signing secret (starts with `whsec_`) that appears
    - Add it to `.env.local` as `STRIPE_WEBHOOK_SECRET`
@@ -53,7 +53,7 @@ Expect: `ready - started server on http://localhost:3000`
    **Terminal C** - Test the webhook:
    ```bash
    # Health check (should return {"ok":true,"route":"stripe/webhook"})
-   curl http://localhost:3000/api/stripe/webhook
+   curl http://localhost:3001/api/stripe/webhook
    
    # Trigger a test event
    stripe trigger checkout.session.completed
@@ -62,7 +62,30 @@ Expect: `ready - started server on http://localhost:3000`
    - In Terminal A, you should see: `✅ Webhook received: checkout.session.completed` and `🧾 Order upserted: <id> PAID`
    - In Terminal B, you should see: `← [200] OK`
 
-7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+## Getting the UI Running (Catalog → Cart → Checkout)
+
+1. **Seed demo products (with images)**:
+   ```bash
+   pnpm db:migrate
+   pnpm db:seed
+   ```
+
+2. **Start dev server (port 3001)**:
+   ```bash
+   pnpm dev
+   ```
+
+3. **Browse the app**:
+   - `/` – Product catalog (images via next/image)
+   - `/product/[slug]` – Product detail with Add to Cart
+   - `/cart` – Server-priced subtotal
+   - `/checkout` – Address form → Stripe Checkout
+   - `/success` – Receipt (after webhook confirms payment)
+   - `/cancel` – Payment canceled
+
+**Auth/Admin**: Not included by design (portfolio scope). Products are seeded. Enable an admin panel later if needed (see "Enhancements").
+
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
 ## Tech Stack
 
@@ -72,6 +95,16 @@ Expect: `ready - started server on http://localhost:3000`
 - React Hook Form + Zod
 - Tailwind CSS
 - TypeScript
+
+## Features
+
+- **Guest Checkout**: No authentication required – customers can browse and purchase without accounts
+- **Product Catalog**: Browse products with images, descriptions, and pricing
+- **Shopping Cart**: Client-side cart with localStorage persistence and server-validated pricing
+- **Stripe Checkout**: Secure payment processing with Stripe Checkout Sessions
+- **Order Management**: Webhook-based order persistence with receipt display
+- **Promo Codes** (optional): Enable with `NEXT_PUBLIC_ENABLE_PROMO_CODES=true` to allow discount coupons
+- **Responsive Design**: Mobile-friendly UI with Tailwind CSS
 
 ## Project Structure
 
@@ -206,7 +239,7 @@ Add these environment variables in your Vercel project settings:
 
 ## Scripts
 
-- `pnpm dev` - Start development server (port 3000)
+- `pnpm dev` - Start development server (port 3001)
 - `pnpm build` - Build for production
 - `pnpm start` - Start production server
 - `pnpm db:generate` - Generate Prisma client
