@@ -102,10 +102,11 @@ describe('SuccessReceipt', () => {
     render(<SuccessReceipt order={mockOrder} sessionId="cs_test_123" />);
     
     expect(screen.getByText(/Subtotal:/i)).toBeInTheDocument();
-    // Find the specific $200.00 in the totals section (not in line items)
-    const totals = screen.getAllByText(/\$200\.00/i);
-    expect(totals.length).toBeGreaterThan(0);
-    expect(screen.getByText(/Total:/i)).toBeInTheDocument();
+    // Check for "Total:" specifically (not "Subtotal:")
+    expect(screen.getByText(/^Total:$/i)).toBeInTheDocument();
+    // Just verify currency amounts are displayed (may appear multiple times)
+    const currencyAmounts = screen.getAllByText(/\$200\.00/i);
+    expect(currencyAmounts.length).toBeGreaterThanOrEqual(1);
   });
 
   it('clears cart when order status is PAID', () => {
