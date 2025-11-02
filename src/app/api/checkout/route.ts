@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch products from DB to trust price & name
-    const ids = parsed.data.items.map(i => i.productId);
+    const ids = parsed.data.items.map((i) => i.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: ids }, active: true },
     });
@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Build Stripe line items from trusted DB values
-    const line_items = parsed.data.items.map(i => {
-      const p = products.find(p => p.id === i.productId)!;
+    const line_items = parsed.data.items.map((i) => {
+      const p = products.find((p) => p.id === i.productId)!;
       return {
         price_data: {
           currency: p.currency,
