@@ -108,20 +108,18 @@ export default function CheckoutPage() {
 
   if (cartItems.length === 0) {
     return (
-      <main className="min-h-screen p-4">
-        <div className="max-w-4xl mx-auto">
-          <EmptyState
-            title="Your cart is empty"
-            message="Add some products before checking out."
-          />
-          <div className="text-center mt-8">
-            <Link
-              href={routes.home}
-              className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors"
-            >
-              Browse Products
-            </Link>
-          </div>
+      <>
+        <EmptyState
+          title="Your cart is empty"
+          message="Add some products before checking out."
+        />
+        <div className="text-center mt-8">
+          <Link
+            href={routes.home}
+            className="inline-block px-6 py-3 bg-cyan-400 text-slate-900 font-semibold rounded-lg hover:bg-cyan-300 transition-colors"
+          >
+            Browse Products
+          </Link>
         </div>
       </>
     );
