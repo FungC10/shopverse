@@ -16,17 +16,23 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Check if coupon exists in Stripe
-    const coupons = await stripe.coupons.list({ code: code.toUpperCase(), limit: 1 });
+    // Check if promotion code exists in Stripe
+    // Note: promotionCodes.list() accepts a code parameter, coupons.list() does not
+    const promotionCodes = await stripe.promotionCodes.list({ 
+      code: code.toUpperCase(), 
+      limit: 1,
+      active: true,
+    });
     
-    if (coupons.data.length === 0) {
+    if (promotionCodes.data.length === 0) {
       return NextResponse.json({ valid: false });
     }
 
-    const coupon = coupons.data[0];
+    const promotionCode = promotionCodes.data[0];
+    const coupon = promotionCode.coupon;
 
     // Check if coupon is valid (not expired, not archived)
-    const isValid = coupon.valid && !coupon.deleted;
+    const isValid = coupon.valid && !coupon.deleted && promotionCode.active;
 
     return NextResponse.json({
       valid: isValid,

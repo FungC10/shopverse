@@ -5,8 +5,26 @@ import Pagination from '@/components/Pagination';
 import SearchBar from '@/components/SearchBar';
 import ProductGridSkeleton from '@/components/ProductGridSkeleton';
 import { Suspense } from 'react';
+import type { Metadata } from 'next';
+import { env } from '@/lib/env';
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: 'Shop - Discover Amazing Products',
+  description: 'Browse our collection of high-quality products. Find the perfect items for your needs with secure checkout and fast delivery.',
+  openGraph: {
+    title: 'Shop - Discover Amazing Products | ShopVerse',
+    description: 'Browse our collection of high-quality products. Find the perfect items for your needs with secure checkout and fast delivery.',
+    url: env.NEXT_PUBLIC_APP_URL,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Shop - Discover Amazing Products | ShopVerse',
+    description: 'Browse our collection of high-quality products with secure checkout.',
+  },
+};
 
 interface HomePageProps {
   searchParams: Promise<{ page?: string; q?: string }>;
@@ -80,8 +98,29 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const page = Math.max(1, parseInt(params.page || '1', 10));
   const searchQuery = params.q;
 
+  // Structured data for SEO
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'ShopVerse',
+    url: env.NEXT_PUBLIC_APP_URL,
+    description: 'Modern e-commerce platform with secure Stripe checkout',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${env.NEXT_PUBLIC_APP_URL}/?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <SearchBar />
       <Suspense fallback={<ProductGridSkeleton />}>
         <ProductGrid page={page} searchQuery={searchQuery} />
