@@ -39,6 +39,8 @@
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
     "@vitejs/plugin-react": "^4.2.0",
     "@vitest/ui": "^1.0.0",
     "autoprefixer": "^10.4.16",

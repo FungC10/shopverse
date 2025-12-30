@@ -49,8 +49,8 @@ vi.mock('next/headers', () => ({
 let POST: typeof import('./route').POST;
 
 beforeAll(async () => {
-  const module = await import('./route');
-  POST = module.POST;
+  const routeModule = await import('./route');
+  POST = routeModule.POST;
 });
 
 describe('POST /api/stripe/webhook - OrderItem persistence', () => {
