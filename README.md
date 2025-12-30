@@ -4,6 +4,8 @@ Minimal, modern e-commerce demo from product list → cart → Stripe Checkout �
 
 I kept the surface minimal to highlight production-grade concerns clients pay for: strict validation, server-trusted pricing, and webhook-driven persistence. Admin/auth/inventory are intentionally omitted to focus on the hard parts of a real checkout system.
 
+> 📊 **Freelance Readiness**: See [`FREELANCE_READINESS.md`](./FREELANCE_READINESS.md) for a comprehensive assessment of what's production-ready, what could be improved, and recommendations for different client types.
+
 ![Demo Flow](demo.gif)
 
 *30-second demo: Catalog → Cart → Checkout → Receipt.*
@@ -307,6 +309,13 @@ Promo codes allow customers to apply discounts at checkout using Stripe coupons.
 - Applied at checkout session creation (discount visible in Stripe Checkout UI)
 
 ## Deployment (Vercel)
+
+> 📖 **For a comprehensive deployment guide**, see [`DEPLOYMENT.md`](./DEPLOYMENT.md) which covers:
+> - Why Vercel is perfect for this app (serverless considerations)
+> - Step-by-step deployment instructions
+> - Post-deployment verification
+> - Troubleshooting common issues
+> - Important serverless considerations (rate limiting, cold starts, etc.)
 
 ### Prerequisites
 
