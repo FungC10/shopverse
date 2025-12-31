@@ -39,14 +39,16 @@
     border-width: 0;
   }
 
+  /* Default header styling */
+  header.site-header {
+    z-index: 9999;
+  }
+
   /* Safari sticky header fallback */
-  .safari header.site-header {
+  html.safari .site-header {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100%;
-    z-index: 2147483647 !important;
+    top: 0;
+    z-index: 9999;
   }
 
   body.safari-pad {
