@@ -61,7 +61,7 @@ export default function Navbar() {
               href="/"
               className="text-slate-300 hover:text-cyan-300 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-950 rounded px-3 py-1.5"
             >
-              Catalog
+              Shop
             </Link>
             <Link
               href="/cart"
