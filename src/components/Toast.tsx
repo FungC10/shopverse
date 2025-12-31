@@ -82,7 +82,7 @@ export default function Toast() {
 
   return createPortal(
     <div
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] flex flex-col gap-2"
+      className="fixed top-4 left-1/2 -translate-x-1/2 z-[99999] isolate flex flex-col gap-2"
       role="region"
       aria-label="Notifications"
     >
