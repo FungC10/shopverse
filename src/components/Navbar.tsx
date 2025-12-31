@@ -8,7 +8,13 @@ export default function Navbar() {
 
   useEffect(() => {
     const updateCount = () => {
-      const raw = localStorage.getItem('shopverse:cart');
+      let raw: string | null = null;
+      try {
+        raw = localStorage.getItem('shopverse:cart');
+      } catch {
+        setCount(0);
+        return;
+      }
       if (raw) {
         try {
           const items = JSON.parse(raw) as { productId: string; quantity: number }[];

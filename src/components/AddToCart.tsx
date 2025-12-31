@@ -12,12 +12,27 @@ export default function AddToCart({ productId }: { productId: string }) {
       disabled={busy}
       onClick={() => {
         setBusy(true);
-        const raw = localStorage.getItem('shopverse:cart');
-        const items: { productId: string; quantity: number }[] = raw ? JSON.parse(raw) : [];
+        let raw: string | null = null;
+        try {
+          raw = localStorage.getItem('shopverse:cart');
+        } catch {
+          setBusy(false);
+          return;
+        }
+        let items: { productId: string; quantity: number }[] = [];
+        try {
+          items = raw ? JSON.parse(raw) : [];
+        } catch {
+          items = [];
+        }
         const idx = items.findIndex((i) => i.productId === productId);
         if (idx >= 0) items[idx].quantity += 1;
         else items.push({ productId, quantity: 1 });
-        localStorage.setItem('shopverse:cart', JSON.stringify(items));
+        try {
+          localStorage.setItem('shopverse:cart', JSON.stringify(items));
+        } catch {
+          // localStorage unavailable (e.g., Safari Private Mode)
+        }
         setBusy(false);
         // Dispatch event to update navbar cart count
         window.dispatchEvent(new Event('cartUpdated'));

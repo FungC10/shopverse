@@ -22,7 +22,11 @@ export default function SuccessReceipt({ order, sessionId }: SuccessReceiptProps
   // Clear cart once order is confirmed PAID
   useEffect(() => {
     if (order.status === 'PAID') {
-      localStorage.removeItem('shopverse:cart');
+      try {
+        localStorage.removeItem('shopverse:cart');
+      } catch {
+        // localStorage unavailable (e.g., Safari Private Mode)
+      }
       window.dispatchEvent(new Event('cartUpdated'));
     }
   }, [order.status]);

@@ -14,14 +14,28 @@ export type CartItemWithProduct = CartItem & {
 
 export function getCart(): CartItem[] {
   if (typeof window === 'undefined') return [];
-  const stored = localStorage.getItem(CART_KEY);
-  return stored ? JSON.parse(stored) : [];
+  let stored: string | null = null;
+  try {
+    stored = localStorage.getItem(CART_KEY);
+  } catch {
+    return [];
+  }
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return [];
+  }
 }
 
 export function setCart(items: CartItem[]): void {
   if (typeof window === 'undefined') return;
   const limited = items.slice(0, 20); // max 20 items
-  localStorage.setItem(CART_KEY, JSON.stringify(limited));
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(limited));
+  } catch {
+    // localStorage unavailable (e.g., Safari Private Mode)
+  }
 }
 
 export function addItem(productId: string, quantity: number = 1): void {
@@ -67,7 +81,11 @@ export const removeFromCart = removeItem;
 
 export function clearCart(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(CART_KEY);
+  try {
+    localStorage.removeItem(CART_KEY);
+  } catch {
+    // localStorage unavailable (e.g., Safari Private Mode)
+  }
 }
 
 export function total(
@@ -85,11 +103,19 @@ export function total(
 
 export function getStoredEmail(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(EMAIL_KEY);
+  try {
+    return localStorage.getItem(EMAIL_KEY);
+  } catch {
+    return null;
+  }
 }
 
 export function saveEmail(email: string): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(EMAIL_KEY, email);
+  try {
+    localStorage.setItem(EMAIL_KEY, email);
+  } catch {
+    // localStorage unavailable (e.g., Safari Private Mode)
+  }
 }
 

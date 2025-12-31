@@ -70,8 +70,22 @@ export default function CheckoutPage() {
 
   // Load cart items
   useEffect(() => {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
-    setItems(raw ? JSON.parse(raw) : []);
+    if (typeof window === 'undefined') {
+      setItems([]);
+      return;
+    }
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem('shopverse:cart');
+    } catch {
+      setItems([]);
+      return;
+    }
+    try {
+      setItems(raw ? JSON.parse(raw) : []);
+    } catch {
+      setItems([]);
+    }
   }, []);
 
   // Fetch products for order summary
@@ -127,7 +141,11 @@ export default function CheckoutPage() {
         if (!mounted) return;
 
         if (cleaned.length !== items.length) {
-          localStorage.setItem('shopverse:cart', JSON.stringify(cleaned));
+          try {
+            localStorage.setItem('shopverse:cart', JSON.stringify(cleaned));
+          } catch {
+            // localStorage unavailable (e.g., Safari Private Mode)
+          }
           setItems(cleaned);
           window.dispatchEvent(new Event('cartUpdated'));
           toast.push({
@@ -154,8 +172,21 @@ export default function CheckoutPage() {
     setErr(null);
 
     try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
-      const items = raw ? JSON.parse(raw) : [];
+      if (typeof window === 'undefined') {
+        throw new Error('Your cart is empty.');
+      }
+      let raw: string | null = null;
+      try {
+        raw = localStorage.getItem('shopverse:cart');
+      } catch {
+        throw new Error('Your cart is empty.');
+      }
+      let items: { productId: string; quantity: number }[] = [];
+      try {
+        items = raw ? JSON.parse(raw) : [];
+      } catch {
+        items = [];
+      }
 
       if (!items.length) {
         throw new Error('Your cart is empty.');

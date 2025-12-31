@@ -15,8 +15,22 @@ export default function CartPage() {
 
   useEffect(() => {
     const loadCart = () => {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem('shopverse:cart') : null;
-      setItems(raw ? JSON.parse(raw) : []);
+      if (typeof window === 'undefined') {
+        setItems([]);
+        return;
+      }
+      let raw: string | null = null;
+      try {
+        raw = localStorage.getItem('shopverse:cart');
+      } catch {
+        setItems([]);
+        return;
+      }
+      try {
+        setItems(raw ? JSON.parse(raw) : []);
+      } catch {
+        setItems([]);
+      }
     };
     loadCart();
     window.addEventListener('storage', loadCart);
@@ -32,8 +46,18 @@ export default function CartPage() {
   const products: any[] = data?.products ?? [];
 
   const updateQty = (productId: string, delta: number) => {
-    const raw = localStorage.getItem('shopverse:cart');
-    const current: Item[] = raw ? JSON.parse(raw) : [];
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem('shopverse:cart');
+    } catch {
+      return;
+    }
+    let current: Item[] = [];
+    try {
+      current = raw ? JSON.parse(raw) : [];
+    } catch {
+      current = [];
+    }
     const item = current.find((i) => i.productId === productId);
     if (item) {
       item.quantity = Math.max(1, Math.min(10, item.quantity + delta));
@@ -43,16 +67,34 @@ export default function CartPage() {
     } else if (delta > 0) {
       current.push({ productId, quantity: 1 });
     }
-    localStorage.setItem('shopverse:cart', JSON.stringify(current));
+    try {
+      localStorage.setItem('shopverse:cart', JSON.stringify(current));
+    } catch {
+      // localStorage unavailable (e.g., Safari Private Mode)
+    }
     setItems(current);
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
   const remove = (productId: string) => {
-    const raw = localStorage.getItem('shopverse:cart');
-    const current: Item[] = raw ? JSON.parse(raw) : [];
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem('shopverse:cart');
+    } catch {
+      return;
+    }
+    let current: Item[] = [];
+    try {
+      current = raw ? JSON.parse(raw) : [];
+    } catch {
+      current = [];
+    }
     const updated = current.filter((i) => i.productId !== productId);
-    localStorage.setItem('shopverse:cart', JSON.stringify(updated));
+    try {
+      localStorage.setItem('shopverse:cart', JSON.stringify(updated));
+    } catch {
+      // localStorage unavailable (e.g., Safari Private Mode)
+    }
     setItems(updated);
     window.dispatchEvent(new Event('cartUpdated'));
   };
