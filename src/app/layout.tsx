@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import { ToastProvider } from '@/lib/useToast';
 import Toast from '@/components/Toast';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import SafariDetector from '@/components/SafariDetector';
 import { env } from '@/lib/env';
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-dvh bg-slate-950 text-slate-100 antialiased">
+        <SafariDetector />
         <ErrorBoundary>
           <ToastProvider>
             <Navbar />

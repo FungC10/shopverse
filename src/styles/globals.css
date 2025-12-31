@@ -38,5 +38,16 @@
     white-space: nowrap;
     border-width: 0;
   }
+
+  /* Safari sticky header fallback */
+  .safari header.site-header {
+    position: fixed !important;
+    top: 0;
+    width: 100%;
+  }
+
+  body.safari-pad {
+    padding-top: 4rem; /* adjust based on actual header height */
+  }
 }
 
