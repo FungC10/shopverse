@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { maskEmail, maskAddress } from '@/lib/mask';
 import type { Order, OrderItem, Product } from '@prisma/client';
 
@@ -19,6 +20,8 @@ interface SuccessReceiptProps {
 }
 
 export default function SuccessReceipt({ order, sessionId }: SuccessReceiptProps) {
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+
   // Clear cart once order is confirmed PAID
   useEffect(() => {
     if (order.status === 'PAID') {
@@ -113,12 +116,44 @@ export default function SuccessReceipt({ order, sessionId }: SuccessReceiptProps
           {order.items.length > 0 ? (
             <ul className="space-y-3">
               {order.items.map((item) => (
-                <li key={item.id} className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="font-medium">{item.product.name}</div>
-                    <div className="text-sm text-slate-400">Quantity: {item.quantity}</div>
+                <li key={item.id} className="flex items-center gap-4">
+                  {/* Product image */}
+                  <div className="relative w-16 h-16 flex-shrink-0 rounded border border-white/10 overflow-hidden">
+                    {imageErrors.has(item.product.id) ? (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-slate-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    ) : (
+                      <Image
+                        src={item.product.imageUrl}
+                        alt={item.product.name}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                        onError={() => {
+                          setImageErrors((prev) => new Set(prev).add(item.product.id));
+                        }}
+                      />
+                    )}
                   </div>
-                  <div className="text-cyan-300 ml-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{item.product.name}</div>
+                    <div className="text-sm text-slate-400 mt-1">Quantity: {item.quantity}</div>
+                  </div>
+                  <div className="text-cyan-300 ml-4 flex-shrink-0">
                     {formatCurrency(item.unitAmount * item.quantity, order.currency)}
                   </div>
                 </li>
