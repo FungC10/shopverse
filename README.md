@@ -443,3 +443,6 @@ pnpm test
 - `pnpm typecheck` - Type check without emitting
 - `pnpm format` - Format code with Prettier
 - `pnpm check:orders` - Check recent orders in database
+
+---
+Built by Pazu — `https://pazu.dev`

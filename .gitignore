@@ -45,6 +45,9 @@ next-env.d.ts
 # prisma/migrations/*
 # !prisma/migrations/.gitkeep
 
-# architecture (keep public version if needed)
-architecture.md
+# docs: keep only public docs in git
+*.md
+!README.md
+!DEPLOYMENT.md
+!architecture.md
 
