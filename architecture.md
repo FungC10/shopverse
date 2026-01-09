@@ -1,23 +1,13 @@
-🛍️ ShopVerse — Architecture Overview
+# 🛍️ ShopVerse — Architecture Overview
 
 Minimal, modern e-commerce demo from product list → cart → Stripe Checkout → order receipt (via webhooks).
 Goal: demonstrate clean domain modeling, safe validation (Zod), solid forms (RHF), and bullet-proof payment flow.
-
-!!! add this file to .gitignore (keep a public redacted ARCHITECTURE.public.md)
-
-Commit style
-Use feat:, fix:, refactor:, chore:, docs:.
-Commit per feature (small, reviewable diffs).
 
 ⸻
 
 1) Purpose
 
-ShopVerse showcases a production-grade checkout path with server validation and webhook-driven order finalization. It’s the commerce pillar in the portfolio:
-	•	InsightBoard – async data flow & charts
-	•	TaskZen – offline-first state & UI logic
-	•	WeatherFlow – API + map + UX polish
-	•	ShopVerse – full-stack checkout + validation + webhooks
+ShopVerse showcases a production-grade checkout path with server validation and webhook-driven order finalization. This architecture document outlines the technical decisions, data flow, and implementation patterns used throughout the application.
 
 Focus: catalog → cart → address form → Stripe Checkout → webhook → receipt.
 No CMS required; seed data via Prisma. Guest checkout by default.
@@ -39,7 +29,7 @@ Testing	Vitest + Testing Library	Units, components, API handlers
 DevOps	Vercel	Preview deploys, env management
 Lint/Format	ESLint + Prettier	Consistent codebase
 
-* PlanetScale if MySQL; otherwise prefer Postgres (Neon/Supabase). Pick one.
+* Note: PlanetScale uses MySQL; for PostgreSQL, use Neon or Supabase.
 
 ⸻
 
@@ -313,7 +303,7 @@ export async function POST(req: Request) {
         state:       s.customer_details?.address?.state ?? undefined,
         postalCode:  s.customer_details?.address?.postal_code ?? undefined,
         country:     s.customer_details?.address?.country ?? undefined,
-        // Items persisted separately if needed (via Line Items API)
+        // OrderItems are persisted via separate line item mapping (see webhook implementation)
       },
       update: { status: "PAID" },
     });
@@ -369,7 +359,7 @@ Design tokens (Tailwind)
 	•	Use idempotency keys when creating sessions.
 	•	Input validation on server (Zod) before touching Stripe/DB.
 	•	Hide secrets; scope Stripe keys to environment.
-	•	GDPR-ish hygiene: store only what you display; no card data ever touches app.
+	•	Privacy compliance: store only necessary customer data; no card data ever touches the application.
 
 ⸻
 
@@ -399,7 +389,7 @@ pnpm test
 
 Stripe CLI (dev webhook tunnel)
 
-stripe listen --forward-to localhost:3000/api/stripe/webhook
+stripe listen --forward-to localhost:3001/api/stripe/webhook
 
 Test cards
 	•	4242 4242 4242 4242 • any future exp • any CVC • any ZIP
@@ -411,7 +401,7 @@ Test cards
 	•	Set env vars (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, DATABASE_URL, NEXT_PUBLIC_APP_URL).
 	•	Configure Image domains.
 	•	Create separate webhook endpoint in Stripe Dashboard for production URL.
-	•	Use Vercel previews on PRs; run migrations on deploy (or prisma migrate deploy via build step/cron).
+	•	Use Vercel previews on PRs; run migrations on deploy via `prisma migrate deploy` in build step.
 
 ⸻
 

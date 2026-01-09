@@ -4,8 +4,6 @@ Minimal, modern e-commerce demo from product list → cart → Stripe Checkout �
 
 I kept the surface minimal to highlight production-grade concerns clients pay for: strict validation, server-trusted pricing, and webhook-driven persistence. Admin/auth/inventory are intentionally omitted to focus on the hard parts of a real checkout system.
 
-> 📊 **Freelance Readiness**: See [`FREELANCE_READINESS.md`](./FREELANCE_READINESS.md) for a comprehensive assessment of what's production-ready, what could be improved, and recommendations for different client types.
-
 ![Demo Flow](demo.gif)
 
 *30-second demo: Catalog → Cart → Checkout → Receipt.*
@@ -163,7 +161,8 @@ This demo includes several production-ready patterns:
 - In-memory sliding window (10 requests/minute per client)
 - Identifies clients by IP address
 - Returns structured 429 errors with `RATE_LIMIT_EXCEEDED` code
-- **Note**: For demo purposes; resets on serverless cold starts
+- Includes `X-RateLimit-*` headers and `Retry-After`
+- **Note**: For demo purposes; in-memory limits reset on serverless cold starts. For production scale: use Redis/Edge config or an external limiter.
 
 ✅ **Error Boundaries**: Global React error boundary catches component crashes
 - Prevents white screen of death
@@ -184,19 +183,6 @@ This demo includes several production-ready patterns:
 - Webhook verifies signatures using raw body (prevents spoofing)
 - Server builds line items from DB prices only; client cart is informational
 
-## Rate Limiting (Demo)
-
-The `/api/checkout` endpoint includes simple in-memory rate limiting for demo purposes:
-- **Limit**: 10 requests per minute per client (sliding window)
-- **Identification**: Client IP address (from `x-forwarded-for` or `x-real-ip` headers)
-- **Response**: Returns `429 Too Many Requests` with `RATE_LIMIT_EXCEEDED` error code
-- **Headers**: Includes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `Retry-After`
-
-**⚠️ Demo Limitation**: On serverless platforms (Vercel, etc.), in-memory rate limits reset between cold starts. This is acceptable for demo/portfolio purposes, but for production scale you should consider:
-- Persistent store (Redis, database) 
-- Vercel Edge Config
-- External rate limiting service (Cloudflare, etc.)
-
 ## Architecture Highlights
 
 ### Server-Client Price Validation
@@ -207,14 +193,10 @@ Prices are never trusted from the client. The checkout flow:
 4. Stripe handles payment with server-controlled pricing
 
 ### Webhook → OrderItem Persistence
-The webhook handler ensures complete order history:
-1. Receives `checkout.session.completed` event
-2. Verifies Stripe signature (prevents spoofing)
-3. Upserts Order record (idempotent by `stripePaymentId`)
-4. Fetches Stripe line items with expanded product metadata
-5. Maps each line item to DB product via `app_product_id` metadata
-6. Persists OrderItem records in atomic transaction
-7. Enables order analytics, refunds, and reorders
+The webhook handler persists complete order history:
+1. Receives `checkout.session.completed` and verifies Stripe signature
+2. Upserts Order idempotently by `stripePaymentId`
+3. Maps Stripe line items to DB products via `app_product_id` metadata and writes OrderItems (atomic)
 
 ### Error Handling Strategy
 - **React Errors**: Global ErrorBoundary catches component crashes
